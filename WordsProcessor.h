@@ -14,13 +14,13 @@ public:
     Q_INVOKABLE void loadFile( const QString &strFilePath );
 
 signals:
-    void processingFinished( const QVariantMap &oWordsCount );
+    void processingFinished( const QVariantList &oWordsCount );
 
 private:
     WordsProcessor();
     ~WordsProcessor();
 
-    QHash< QString, int > processFile( const QString &strFilePath );
+    QVariantList processFile( const QString &strFilePath );
 };
 
 #endif // WORDSPROCESSOR_H

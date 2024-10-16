@@ -6,6 +6,12 @@
 
 #include "WordsProcessor.h"
 
+namespace {
+
+const int MAX_WORDS = 15;
+
+}//namespace
+
 WordsProcessor::WordsProcessor()
 {
 }
@@ -30,16 +36,21 @@ QVariantMap convertHashToMap( const QHash< QString, int > &hash )
     return map;
 }
 
-void WordsProcessor::loadFile( const QString &strFilePath )
+bool compareByCount(const std::pair<QString, int> &count1, const std::pair<QString, int> &count2)
 {
-    QHash< QString, int > oWordsCount = processFile( strFilePath );
-
-    emit processingFinished( convertHashToMap( oWordsCount ) );
+    return count1.second > count2.second;
 }
 
-QHash< QString, int > WordsProcessor::processFile( const QString &strFilePath )
+void WordsProcessor::loadFile( const QString &strFilePath )
 {
-    QHash< QString, int > oWordsCount;
+    QVariantList oWordsCount = processFile( strFilePath );
+
+    emit processingFinished(  oWordsCount );
+}
+
+QVariantList WordsProcessor::processFile( const QString &strFilePath )
+{
+    QVariantList oWordsCount;
     QUrl url( strFilePath );
     QString strFileName = url.toLocalFile();
 
@@ -49,9 +60,20 @@ QHash< QString, int > WordsProcessor::processFile( const QString &strFilePath )
         QTextStream in( &file );
         QString strFileContent = in.readAll();
         QStringList arrWords = strFileContent.split( QRegularExpression("[^\\p{L}]+" ), Qt::SkipEmptyParts );
-        for ( int i = 0; i < arrWords.length(); i++ )
-        {
-            oWordsCount[ arrWords[i] ] = oWordsCount.contains( arrWords[i] ) ? oWordsCount.value( arrWords[i] ) + 1 : 1;
+
+        std::map< QString, int > oWordCountsMap;
+        for ( const QString &strWord : arrWords ) {
+            oWordCountsMap[strWord.toLower()]++;
+        }
+        std::vector< std::pair< QString, int > > arrWordsPairs(oWordCountsMap.begin(), oWordCountsMap.end());
+        std::sort( arrWordsPairs.begin(), arrWordsPairs.end(), compareByCount );
+
+        int nWordsToProcess = arrWordsPairs.size() < MAX_WORDS ? arrWordsPairs.size() : MAX_WORDS;
+        for ( int i = 0; i < nWordsToProcess; i++ ) {
+            QVariantMap wordData;
+            wordData["word"] = arrWordsPairs[i].first;
+            wordData["count"] = arrWordsPairs[i].second;
+            oWordsCount.append( wordData );
         }
     }
 
