@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QUrl>
 #include <QRegularExpression>
+#include <QtConcurrent>
 
 #include "WordsProcessor.h"
 
@@ -43,12 +44,16 @@ bool compareByCount(const std::pair<QString, int> &count1, const std::pair<QStri
 
 void WordsProcessor::loadFile( const QString &strFilePath )
 {
-    QVariantList oWordsCount = processFile( strFilePath );
+    QtConcurrent::run([this, strFilePath]() {
+        QVariantList oWordsCount = processFile( strFilePath, [this](int progress) {
+            emit progressChanged( progress );
+        });
 
-    emit processingFinished(  oWordsCount );
+        emit processingFinished(  oWordsCount );
+    });
 }
 
-QVariantList WordsProcessor::processFile( const QString &strFilePath )
+QVariantList WordsProcessor::processFile( const QString &strFilePath, std::function<void(int)> reportProgress )
 {
     QVariantList oWordsCount;
     QUrl url( strFilePath );
@@ -62,8 +67,15 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath )
         QStringList arrWords = strFileContent.split( QRegularExpression("[^\\p{L}]+" ), Qt::SkipEmptyParts );
 
         std::map< QString, int > oWordCountsMap;
-        for ( const QString &strWord : arrWords ) {
-            oWordCountsMap[strWord.toLower()]++;
+        int nCurrentProgress = 0;
+        for ( int wordIndex = 0; wordIndex < arrWords.size(); ++wordIndex ) {
+            oWordCountsMap[arrWords[wordIndex].toLower()]++;
+
+            size_t nProgress = static_cast< size_t >( static_cast< double >(wordIndex + 1) / ( arrWords.size() / 100 ) );
+            if ( nProgress != nCurrentProgress ) {
+                nCurrentProgress = nProgress;
+                reportProgress( nProgress );
+            }
         }
         std::vector< std::pair< QString, int > > arrWordsPairs(oWordCountsMap.begin(), oWordCountsMap.end());
         std::sort( arrWordsPairs.begin(), arrWordsPairs.end(), compareByCount );

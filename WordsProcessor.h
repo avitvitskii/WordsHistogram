@@ -15,12 +15,13 @@ public:
 
 signals:
     void processingFinished( const QVariantList &oWordsCount );
+    void progressChanged( int progress );
 
 private:
     WordsProcessor();
     ~WordsProcessor();
 
-    QVariantList processFile( const QString &strFilePath );
+    QVariantList processFile( const QString &strFilePath, std::function<void(int)> reportProgress );
 };
 
 #endif // WORDSPROCESSOR_H

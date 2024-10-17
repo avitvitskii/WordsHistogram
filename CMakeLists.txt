@@ -5,7 +5,7 @@ project(WordsHistogram VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.2 REQUIRED COMPONENTS Quick)
+find_package(Qt6 6.2 REQUIRED COMPONENTS Quick Core Concurrent)
 
 
 qt_add_executable(appWordsHistogram
@@ -33,7 +33,7 @@ set_target_properties(appWordsHistogram PROPERTIES
 )
 
 target_link_libraries(appWordsHistogram
-    PRIVATE Qt6::Quick
+    PRIVATE Qt6::Quick Qt6::Core Qt6::Concurrent
 )
 
 include(GNUInstallDirs)
