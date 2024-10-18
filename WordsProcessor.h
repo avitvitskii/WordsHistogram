@@ -16,17 +16,20 @@ public:
 
 signals:
     void processingCanceled();
+    void processingPaused();
     void processingFinished( const QVariantList &oWordsCount );
     void progressChanged( int progress );
 
 public slots:
     void cancelProcessing();
+    void pauseProcessing();
 
 private:
     WordsProcessor();
     ~WordsProcessor();
     QFutureWatcher<void> m_watcher;
     bool m_bCancelRequested;
+    bool m_bPauseRequested;
 
     QVariantList processFile( const QString &strFilePath, std::function<void(int)> reportProgress );
 };

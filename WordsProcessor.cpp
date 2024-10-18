@@ -45,6 +45,10 @@ bool compareByCount(const std::pair<QString, int> &count1, const std::pair<QStri
 void WordsProcessor::loadFile( const QString &strFilePath )
 {
     m_bCancelRequested = false;
+    if (m_bPauseRequested) {
+        m_bPauseRequested = false;
+        return;
+    }
 
     QFuture<void> future = QtConcurrent::run([this, strFilePath]() {
         QVariantList oWordsCount = processFile( strFilePath, [this](int progress) {
@@ -53,6 +57,8 @@ void WordsProcessor::loadFile( const QString &strFilePath )
 
         if (m_bCancelRequested) {
             emit processingCanceled();
+        } else if (m_bPauseRequested) {
+            emit processingPaused();
         } else {
             emit processingFinished( oWordsCount );
         }
@@ -64,6 +70,12 @@ void WordsProcessor::loadFile( const QString &strFilePath )
 void WordsProcessor::cancelProcessing()
 {
     m_bCancelRequested = true;
+    m_bPauseRequested = false;
+}
+
+void WordsProcessor::pauseProcessing()
+{
+    m_bPauseRequested = true;
 }
 
 QVariantList WordsProcessor::processFile( const QString &strFilePath, std::function<void(int)> reportProgress )
@@ -82,6 +94,15 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
         std::map< QString, int > oWordCountsMap;
         int nCurrentProgress = 0;
         for ( int wordIndex = 0; wordIndex < arrWords.size(); ++wordIndex ) {
+            while (m_bPauseRequested) {
+                if (m_bCancelRequested) {
+                    oWordsCount.clear();
+                    return oWordsCount;
+                }
+
+                QThread::msleep(100);
+            }
+
             if (m_bCancelRequested) {
                 oWordsCount.clear();
                 return oWordsCount;

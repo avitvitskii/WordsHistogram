@@ -47,6 +47,13 @@ Window {
             enabled: presenter.isProcessing
             width: scaleDimen(150)
             height: scaleDimen(50)
+            text: "Пауза"
+            onClicked: WordsProcessor.pauseProcessing()
+        }
+        Button {
+            enabled: presenter.isProcessing
+            width: scaleDimen(150)
+            height: scaleDimen(50)
             text: "Отмена"
             onClicked: WordsProcessor.cancelProcessing()
         }
