@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Basic
 import QtQuick.Dialogs
 
 import com.avitvitskii.wordsprocessor 1.0
@@ -68,6 +69,7 @@ Window {
 
         anchors {
             top: row.bottom
+            topMargin: scaleDimen(30)
             horizontalCenter: parent.horizontalCenter
         }
         width: 0.5 * parent.width
