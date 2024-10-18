@@ -27,7 +27,13 @@ Window {
             width: scaleDimen(150)
             height: scaleDimen(50)
             text: "Открыть"
-            onClicked: fileDialog.open()
+            onClicked: {
+                if (WordsProcessor.isProcessing) {
+                    WordsProcessor.cancelProcessing();
+                }
+
+                fileDialog.open();
+            }
         }
         Button {
             id: buttonStart
@@ -38,20 +44,19 @@ Window {
             text: "Старт"
             onClicked: {
                 if (!!fileDialog.selectedFile.toString()) {
-                    presenter.isProcessing = true;
                     WordsProcessor.loadFile(fileDialog.selectedFile);
                 }
             }
         }
         Button {
-            enabled: presenter.isProcessing
+            enabled: WordsProcessor.isProcessing
             width: scaleDimen(150)
             height: scaleDimen(50)
             text: "Пауза"
             onClicked: WordsProcessor.pauseProcessing()
         }
         Button {
-            enabled: presenter.isProcessing
+            enabled: WordsProcessor.isProcessing
             width: scaleDimen(150)
             height: scaleDimen(50)
             text: "Отмена"
@@ -120,7 +125,6 @@ Window {
         target: WordsProcessor
 
         function onProcessingCanceled() {
-            presenter.isProcessing = false;
             wordsModel.clear();
             progressBar.value = 0;
         }
@@ -135,7 +139,6 @@ Window {
             wordsCount.forEach(function(word) {
                 wordsModel.append({"word": word.word, "count": word.count});
             });
-            presenter.isProcessing = false;
             buttonStart.enabled = false;
         }
         function onProgressChanged(progress) {

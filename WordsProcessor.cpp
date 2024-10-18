@@ -13,14 +13,6 @@ const int MAX_WORDS = 15;
 
 }//namespace
 
-WordsProcessor::WordsProcessor()
-{
-}
-
-WordsProcessor::~WordsProcessor()
-{
-}
-
 WordsProcessor &WordsProcessor::instance()
 {
     static WordsProcessor instance;
@@ -37,34 +29,48 @@ QVariantMap convertHashToMap( const QHash< QString, int > &hash )
     return map;
 }
 
-bool compareByCount(const std::pair<QString, int> &count1, const std::pair<QString, int> &count2)
+bool compareByCount( const std::pair<QString, int> &count1, const std::pair<QString, int> &count2 )
 {
     return count1.second > count2.second;
 }
 
 void WordsProcessor::loadFile( const QString &strFilePath )
 {
+    if ( m_bIsProcessing )
+    {
+        return;
+    }
+
+    setIsProcessing(true);
     m_bCancelRequested = false;
-    if (m_bPauseRequested) {
+    if ( m_bPauseRequested )
+    {
         m_bPauseRequested = false;
         return;
     }
 
     QFuture<void> future = QtConcurrent::run([this, strFilePath]() {
-        QVariantList oWordsCount = processFile( strFilePath, [this](int progress) {
+        QVariantList oWordsCount = processFile( strFilePath, [this]( int progress ) {
             emit progressChanged( progress );
         });
 
-        if (m_bCancelRequested) {
+        if ( m_bCancelRequested )
+        {
             emit processingCanceled();
-        } else if (m_bPauseRequested) {
+        }
+        else if ( m_bPauseRequested )
+        {
             emit processingPaused();
-        } else {
+        }
+        else
+        {
             emit processingFinished( oWordsCount );
         }
+
+        setIsProcessing( false );
     });
 
-    m_watcher.setFuture(future);
+    m_watcher.setFuture( future );
 }
 
 void WordsProcessor::cancelProcessing()
@@ -76,6 +82,14 @@ void WordsProcessor::cancelProcessing()
 void WordsProcessor::pauseProcessing()
 {
     m_bPauseRequested = true;
+}
+
+void WordsProcessor::setIsProcessing(bool isProcessing)
+{
+    if ( m_bIsProcessing != isProcessing ) {
+        m_bIsProcessing = isProcessing;
+        emit isProcessingChanged( isProcessing );
+    }
 }
 
 QVariantList WordsProcessor::processFile( const QString &strFilePath, std::function<void(int)> reportProgress )
@@ -93,9 +107,12 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
 
         std::map< QString, int > oWordCountsMap;
         int nCurrentProgress = 0;
-        for ( int wordIndex = 0; wordIndex < arrWords.size(); ++wordIndex ) {
-            while (m_bPauseRequested) {
-                if (m_bCancelRequested) {
+        for ( int wordIndex = 0; wordIndex < arrWords.size(); ++wordIndex )
+        {
+            while ( m_bPauseRequested )
+            {
+                if ( m_bCancelRequested )
+                {
                     oWordsCount.clear();
                     return oWordsCount;
                 }
@@ -103,7 +120,8 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
                 QThread::msleep(100);
             }
 
-            if (m_bCancelRequested) {
+            if ( m_bCancelRequested )
+            {
                 oWordsCount.clear();
                 return oWordsCount;
             }
@@ -111,7 +129,8 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
             oWordCountsMap[arrWords[wordIndex].toLower()]++;
 
             size_t nProgress = static_cast< size_t >( static_cast< double >(wordIndex + 1) / ( arrWords.size() / 100 ) );
-            if ( nProgress != nCurrentProgress ) {
+            if ( nProgress != nCurrentProgress )
+            {
                 nCurrentProgress = nProgress;
                 reportProgress( nProgress );
             }
@@ -120,7 +139,8 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
         std::sort( arrWordsPairs.begin(), arrWordsPairs.end(), compareByCount );
 
         int nWordsToProcess = arrWordsPairs.size() < MAX_WORDS ? arrWordsPairs.size() : MAX_WORDS;
-        for ( int i = 0; i < nWordsToProcess; i++ ) {
+        for ( int i = 0; i < nWordsToProcess; i++ )
+        {
             QVariantMap wordData;
             wordData["word"] = arrWordsPairs[i].first;
             wordData["count"] = arrWordsPairs[i].second;
