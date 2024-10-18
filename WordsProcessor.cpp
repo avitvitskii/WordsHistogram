@@ -19,16 +19,6 @@ WordsProcessor &WordsProcessor::instance()
     return instance;
 }
 
-QVariantMap convertHashToMap( const QHash< QString, int > &hash )
-{
-    QVariantMap map;
-    for ( QHash< QString, int >::const_iterator it = hash.constBegin(); it != hash.constEnd(); ++it )
-    {
-        map.insert( it.key(), it.value() );
-    }
-    return map;
-}
-
 bool compareByCount( const std::pair<QString, int> &count1, const std::pair<QString, int> &count2 )
 {
     return count1.second > count2.second;
