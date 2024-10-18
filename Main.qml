@@ -43,6 +43,13 @@ Window {
                 }
             }
         }
+        Button {
+            enabled: presenter.isProcessing
+            width: scaleDimen(150)
+            height: scaleDimen(50)
+            text: "Отмена"
+            onClicked: WordsProcessor.cancelProcessing()
+        }
     }
     ProgressBar {
         id: progressBar
@@ -105,7 +112,16 @@ Window {
     Connections {
         target: WordsProcessor
 
+        function onProcessingCanceled() {
+            presenter.isProcessing = false;
+            wordsModel.clear();
+            progressBar.value = 0;
+        }
         function onProcessingFinished(wordsCount) {
+            if (!wordsCount.length) {
+                return;
+            }
+
             presenter.heightPerUnit = Qt.binding(function barHeightBinding() {
                 return presenter.barHeight / wordsCount[0].count;
             });

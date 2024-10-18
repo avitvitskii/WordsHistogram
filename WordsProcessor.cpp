@@ -44,13 +44,26 @@ bool compareByCount(const std::pair<QString, int> &count1, const std::pair<QStri
 
 void WordsProcessor::loadFile( const QString &strFilePath )
 {
-    QtConcurrent::run([this, strFilePath]() {
+    m_bCancelRequested = false;
+
+    QFuture<void> future = QtConcurrent::run([this, strFilePath]() {
         QVariantList oWordsCount = processFile( strFilePath, [this](int progress) {
             emit progressChanged( progress );
         });
 
-        emit processingFinished(  oWordsCount );
+        if (m_bCancelRequested) {
+            emit processingCanceled();
+        } else {
+            emit processingFinished( oWordsCount );
+        }
     });
+
+    m_watcher.setFuture(future);
+}
+
+void WordsProcessor::cancelProcessing()
+{
+    m_bCancelRequested = true;
 }
 
 QVariantList WordsProcessor::processFile( const QString &strFilePath, std::function<void(int)> reportProgress )
@@ -69,6 +82,11 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
         std::map< QString, int > oWordCountsMap;
         int nCurrentProgress = 0;
         for ( int wordIndex = 0; wordIndex < arrWords.size(); ++wordIndex ) {
+            if (m_bCancelRequested) {
+                oWordsCount.clear();
+                return oWordsCount;
+            }
+
             oWordCountsMap[arrWords[wordIndex].toLower()]++;
 
             size_t nProgress = static_cast< size_t >( static_cast< double >(wordIndex + 1) / ( arrWords.size() / 100 ) );
