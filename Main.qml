@@ -45,6 +45,7 @@ Window {
             text: "Старт"
             onClicked: {
                 if (!!fileDialog.selectedFile.toString()) {
+                    wordsModel.clear();
                     WordsProcessor.loadFile(fileDialog.selectedFile);
                 }
             }
@@ -222,7 +223,6 @@ Window {
             wordsCount.forEach(function(word) {
                 wordsModel.append({"word": word.word, "count": word.count});
             });
-            buttonStart.enabled = false;
         }
         function onProgressChanged(progress) {
             progressBar.value = progress;
