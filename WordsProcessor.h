@@ -31,18 +31,21 @@ signals:
 public slots:
     void cancelProcessing();
     void pauseProcessing();
+    void controlStopWords( bool isEnabled );
 
 private:
     WordsProcessor():
         m_bCancelRequested( false ),
         m_bPauseRequested( false ),
-        m_bIsProcessing( false )
+        m_bIsProcessing( false ),
+        m_bIsStopWordsEnabled( false )
     {
     }
     QFutureWatcher< void > m_watcher;
     bool m_bCancelRequested;
     bool m_bPauseRequested;
     bool m_bIsProcessing;
+    bool m_bIsStopWordsEnabled;
 
     QVariantList processFile( const QString &strFilePath, std::function< void( int ) > reportProgress );
     void setIsProcessing( bool isProcessing );

@@ -65,6 +65,20 @@ Window {
             onClicked: WordsProcessor.cancelProcessing()
         }
     }
+    Row {
+        anchors.right: parent.right
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Стоп-слова:"
+        }
+        Switch {
+            id: switchStopWords
+
+            enabled: !WordsProcessor.isProcessing
+            onCheckedChanged: WordsProcessor.controlStopWords(checked)
+        }
+    }
     ProgressBar {
         id: progressBar
 

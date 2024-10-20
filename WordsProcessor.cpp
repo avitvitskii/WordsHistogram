@@ -10,6 +10,32 @@
 namespace {
 
 const int MAX_WORDS = 15;
+const QStringList STOP_WORDS = {
+    // Русские стоп-слова
+    "и", "в", "не", "он", "на", "я", "с", "что", "как", "по", "это", "к", "так",
+    "все", "но", "да", "из", "который", "для", "мне", "было", "быть", "от",
+    "поэтому", "если", "также", "или", "время", "где", "другой", "кто", "свой",
+    "чтобы", "всегда", "ни", "после", "перед", "только", "тогда", "то", "как",
+    "из-за", "моя", "его", "это", "нам", "всех", "будет", "никогда", "сейчас",
+    "вместе", "потому", "между", "даже", "такой", "можно", "теперь", "но",
+    "тем", "все-таки", "просто", "такой", "здесь", "далее", "затем", "при",
+    "всё", "может", "знать", "через", "хотя", "ли", "чем", "таким", "почему",
+    "должен", "всегда", "когда", "такое", "каждый", "где-то", "здесь-то",
+    "а", "бы", "ну", "вот", "ты", "мы", "вы", "они", "тебя", "есть", "там",
+    "у", "за", "она", "её", "же", "уже", "нет", "меня", "тебе", "ещё", "о",
+    "про", "этого", "этом", "какой", "какие", "всего", "чём", "том", "ей",
+
+    // Английские стоп-слова
+    "the", "is", "in", "and", "to", "of", "it", "that", "you", "he", "was", "for",
+    "on", "are", "with", "as", "by", "this", "an", "be", "at", "have", "or",
+    "not", "all", "but", "they", "we", "his", "her", "she", "if", "more", "about",
+    "than", "so", "its", "no", "their", "what", "when", "who", "which", "there",
+    "out", "up", "do", "only", "just", "now", "some", "my", "your", "would",
+    "could", "should", "these", "those", "then", "into", "over", "after",
+    "very", "most", "any", "same", "few", "between", "being", "like", "through",
+    "back", "another", "because", "before", "two", "way", "make", "me", "him",
+    "her", "us", "them", "myself", "himself", "herself", "themselves", "a", "i",
+};
 
 }//namespace
 
@@ -74,6 +100,11 @@ void WordsProcessor::pauseProcessing()
     m_bPauseRequested = true;
 }
 
+void WordsProcessor::controlStopWords( bool isEnabled )
+{
+    m_bIsStopWordsEnabled = isEnabled;
+}
+
 void WordsProcessor::setIsProcessing(bool isProcessing)
 {
     if ( m_bIsProcessing != isProcessing ) {
@@ -116,7 +147,13 @@ QVariantList WordsProcessor::processFile( const QString &strFilePath, std::funct
                 return oWordsCount;
             }
 
-            oWordCountsMap[arrWords[wordIndex].toLower()]++;
+            QString strWord = arrWords[wordIndex].toLower();
+            if ( m_bIsStopWordsEnabled && STOP_WORDS.contains( strWord ) )
+            {
+                continue;
+            }
+
+            oWordCountsMap[strWord]++;
 
             size_t nProgress = static_cast< size_t >( static_cast< double >(wordIndex + 1) / ( arrWords.size() / 100 ) );
             if ( nProgress != nCurrentProgress )
