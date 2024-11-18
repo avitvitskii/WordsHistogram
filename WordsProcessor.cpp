@@ -52,7 +52,7 @@ bool compareByCount( const std::pair<QString, int> &count1, const std::pair<QStr
 
 void WordsProcessor::loadFile( const QString &strFilePath )
 {
-    if ( m_bIsProcessing )
+    if ( m_bIsProcessing && !m_bPauseRequested )
     {
         return;
     }
